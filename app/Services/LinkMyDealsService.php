@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -52,6 +53,7 @@ class LinkMyDealsService
         $response = collect(explode("\n", $response->body()));
 
         $offers = [];
+
         $header   = explode(',', $response->first());
 
         if (count($header) === 1)
@@ -59,7 +61,11 @@ class LinkMyDealsService
 
         $response->each(function ($row, $index) use ($header, &$offers){
             if ($index > 0){
-                $offers[] = array_combine($header, explode(',', $row));
+                $row = str_getcsv($row);
+                if (count($row) === count($header))
+                    $offers[] = array_combine($header, $row);
+                else
+                    $errors[] = $row;
             }
         });
 
